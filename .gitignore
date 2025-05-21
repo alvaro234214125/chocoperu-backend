@@ -31,6 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
 # Java
 *.class
 *.jar
@@ -52,6 +53,9 @@ build/
 # Environment
 .env
 
-# Database credentials (si los tienes aparte)
+# Database credentials
 application.properties
 application.yml
+
+# git status
+# git add . && git commit -m "{mensaje}" && git push

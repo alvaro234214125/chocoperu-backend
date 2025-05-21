@@ -1,6 +1,7 @@
 package com.ecommerce.chocoperu.service;
 
 import com.ecommerce.chocoperu.dto.ProductDto;
+import com.ecommerce.chocoperu.entity.Category;
 import com.ecommerce.chocoperu.entity.Product;
 import com.ecommerce.chocoperu.entity.User;
 import com.ecommerce.chocoperu.repository.ProductRepository;
@@ -17,6 +18,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductService {
 
+    private final CategoryService categoryService;
     private final ProductRepository productRepository;
 
     public List<Product> findAll() {
@@ -59,10 +61,14 @@ public class ProductService {
                 .stock(product.getStock())
                 .price(product.getPrice())
                 .providerId(product.getProvider().getId())
+                .categoryId(product.getCategory().getId())
                 .build();
     }
 
     public Product fromDto(ProductDto dto, User provider) {
+        Category category = categoryService.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
         return Product.builder()
                 .id(dto.getId())
                 .name(dto.getName())
@@ -70,7 +76,9 @@ public class ProductService {
                 .stock(dto.getStock())
                 .price(dto.getPrice())
                 .provider(provider)
+                .category(category)
                 .build();
     }
+
 
 }

@@ -13,7 +13,7 @@ public class ProductDto {
     private double price;
     private int stock;
     private Long providerId;
-
+    private Long categoryId;
 
 }
 
