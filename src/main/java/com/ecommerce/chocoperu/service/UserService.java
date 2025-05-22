@@ -1,5 +1,6 @@
 package com.ecommerce.chocoperu.service;
 
+import com.ecommerce.chocoperu.dto.UserDTO;
 import com.ecommerce.chocoperu.entity.User;
 import com.ecommerce.chocoperu.repository.UserRepository;
 import com.ecommerce.chocoperu.security.CustomUserDetails;
@@ -17,7 +18,10 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-
+    public User getByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
 
     public User register(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -33,6 +37,15 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         return new CustomUserDetails(user);
+    }
+
+    public UserDTO convertToDTO(User user) {
+        return new UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole()
+        );
     }
 
 }
