@@ -58,4 +58,4 @@ application.properties
 application.yml
 
 # git status
-# git add . && git commit -m "{fix payment error}" && git push
+# git add . && git commit -m "{mensaje}" && git push
