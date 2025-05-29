@@ -1,8 +1,10 @@
 package com.ecommerce.chocoperu.controller;
 
 import com.ecommerce.chocoperu.dto.OrderDto;
+import com.ecommerce.chocoperu.entity.CartItem;
 import com.ecommerce.chocoperu.entity.User;
 import com.ecommerce.chocoperu.security.CustomUserDetails;
+import com.ecommerce.chocoperu.service.CartService;
 import com.ecommerce.chocoperu.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final CartService cartService;
 
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('PROVIDER')")
@@ -25,7 +28,11 @@ public class OrderController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
 
-        OrderDto savedOrder = orderService.placeOrder(user, orderDto);
+        List<CartItem> cartItems = cartService.getCartItems(user);
+        if (cartItems.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        OrderDto savedOrder = orderService.placeOrderFromCart(user, cartItems);
         return ResponseEntity.ok(savedOrder);
     }
 

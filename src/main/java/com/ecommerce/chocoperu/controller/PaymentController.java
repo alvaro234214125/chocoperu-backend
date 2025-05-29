@@ -1,12 +1,12 @@
-// com.ecommerce.chocoperu.controller.PaymentController.java
-
 package com.ecommerce.chocoperu.controller;
 
+import com.ecommerce.chocoperu.dto.PaymentRequestDto;
 import com.ecommerce.chocoperu.dto.PaymentDto;
 import com.ecommerce.chocoperu.entity.Payment;
 import com.ecommerce.chocoperu.entity.PaymentStatus;
 import com.ecommerce.chocoperu.security.CustomUserDetails;
 import com.ecommerce.chocoperu.service.PaymentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,12 +24,8 @@ public class PaymentController {
 
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('PROVIDER')")
-    public ResponseEntity<PaymentDto> payOrder(
-            @RequestParam Long orderId,
-            @RequestParam String paymentMethod,
-            @RequestParam String transactionId) {
-
-        Payment payment = paymentService.createPayment(orderId, paymentMethod, transactionId);
+    public ResponseEntity<PaymentDto> payOrder(@Valid @RequestBody PaymentRequestDto request) {
+        Payment payment = paymentService.processPayment(request);
         return ResponseEntity.ok(paymentService.toDto(payment));
     }
 

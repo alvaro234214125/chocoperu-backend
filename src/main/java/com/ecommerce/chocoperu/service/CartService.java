@@ -21,9 +21,14 @@ public class CartService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final OrderService orderService;
+    private final PaymentService paymentService;
+
+    public List<CartItem> getCartItems(User user) {
+        return cartItemRepository.findByUser(user);
+    }
 
     public CartItem addToCart(User user, CartItemRequest request) {
         Product product = productRepository.findById(request.getProductId())
@@ -78,53 +83,19 @@ public class CartService {
         if (cartItems.isEmpty()) {
             throw new RuntimeException("Your cart is empty.");
         }
-
-        Order order = Order.builder()
-                .user(user)
-                .status(OrderStatus.PENDING)
-                .createdAt(LocalDateTime.now())
-                .totalPrice(0.0)
-                .build();
-        order = orderRepository.save(order);
-
-        double total = 0.0;
-
-        for (CartItem item : cartItems) {
-            Product product = item.getProduct();
-            if (product.getStock() < item.getQuantity()) {
-                throw new RuntimeException("Not enough stock for product: " + product.getName());
-            }
-
-            product.setStock(product.getStock() - item.getQuantity());
-            productRepository.save(product);
-
-            OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .product(product)
-                    .quantity(item.getQuantity())
-                    .price(product.getPrice())
-                    .build();
-
-            orderItemRepository.save(orderItem);
-            total += product.getPrice() * item.getQuantity();
-        }
-
-        order.setTotalPrice(total);
-        orderRepository.save(order);
-
+        OrderDto orderDto = orderService.placeOrderFromCart(user, cartItems);
         cartItemRepository.deleteAll(cartItems);
-
-        Payment payment = Payment.builder()
-                .order(order)
-                .paymentMethod("not_provided")
-                .status(PaymentStatus.PENDING)
-                .transactionId(UUID.randomUUID().toString())
-                .build();
-
-        paymentRepository.save(payment);
-
+        Order order = orderRepository.findById(orderDto.getId())
+                .orElseThrow(() -> new RuntimeException("Order not found after checkout"));
+        Payment payment = paymentService.createPayment(
+                order.getId(),
+                "not_provided",
+                UUID.randomUUID().toString(),
+                PaymentStatus.PENDING
+        );
         return order;
     }
+
 
     public CartItem updateQuantity(Long cartItemId, int quantity, User user) {
         CartItem item = cartItemRepository.findById(cartItemId)

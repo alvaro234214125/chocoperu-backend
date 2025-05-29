@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,35 +35,54 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderDto placeOrder(User user, OrderDto orderDto) {
-        Order order = new Order();
-        order.setUser(user);
-        order.setStatus(OrderStatus.valueOf("PENDING"));
-        order.setCreatedAt(LocalDateTime.now());
+    public OrderDto placeOrderFromCart(User user, List<CartItem> cartItems) {
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("Your cart is empty.");
+        }
 
-        List<OrderItem> items = orderDto.getItems().stream().map(itemDto -> {
-            Product product = productRepository.findById(itemDto.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+        Order order = Order.builder()
+                .user(user)
+                .status(OrderStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .totalPrice(0.0)
+                .build();
 
-            OrderItem item = new OrderItem();
-            item.setOrder(order);
-            item.setProduct(product);
-            item.setQuantity(itemDto.getQuantity());
-            item.setPrice(product.getPrice() * itemDto.getQuantity());
-            return item;
-        }).collect(Collectors.toList());
+        List<OrderItem> orderItems = new ArrayList<>();
 
-        double total = items.stream().mapToDouble(OrderItem::getPrice).sum();
+        double total = 0.0;
+
+        for (CartItem item : cartItems) {
+            Product product = item.getProduct();
+
+            if (product.getStock() < item.getQuantity()) {
+                throw new RuntimeException("Not enough stock for product: " + product.getName());
+            }
+
+            product.setStock(product.getStock() - item.getQuantity());
+            productRepository.save(product);
+
+            double price = product.getPrice() * item.getQuantity();
+            total += price;
+
+            OrderItem orderItem = OrderItem.builder()
+                    .order(order)
+                    .product(product)
+                    .quantity(item.getQuantity())
+                    .price(price)
+                    .build();
+
+            orderItems.add(orderItem);
+        }
+
         order.setTotalPrice(total);
         Order savedOrder = orderRepository.save(order);
-
-        items.forEach(item -> item.setOrder(savedOrder));
-        orderItemRepository.saveAll(items);
-
-        savedOrder.setItems(items);
+        orderItems.forEach(item -> item.setOrder(savedOrder));
+        orderItemRepository.saveAll(orderItems);
+        savedOrder.setItems(orderItems);
 
         return toDto(savedOrder);
     }
+
 
     public OrderDto toDto(Order order) {
         OrderDto dto = new OrderDto();
