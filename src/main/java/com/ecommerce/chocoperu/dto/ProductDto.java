@@ -14,7 +14,8 @@ public class ProductDto {
     private int stock;
     private Long providerId;
     private Long categoryId;
-
+    private String providerName;
+    private String categoryName;
 }
 
 

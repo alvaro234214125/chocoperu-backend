@@ -62,6 +62,8 @@ public class ProductService {
                 .price(product.getPrice())
                 .providerId(product.getProvider().getId())
                 .categoryId(product.getCategory().getId())
+                .providerName(product.getProvider().getUsername())
+                .categoryName(product.getCategory().getName())
                 .build();
     }
 

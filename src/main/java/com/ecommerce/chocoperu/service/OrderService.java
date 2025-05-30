@@ -96,6 +96,7 @@ public class OrderService {
             OrderItemDto itemDto = new OrderItemDto();
             itemDto.setId(item.getId());
             itemDto.setProductId(item.getProduct().getId());
+            itemDto.setProductName(item.getProduct().getName());
             itemDto.setQuantity(item.getQuantity());
             itemDto.setPrice(item.getPrice());
             return itemDto;
