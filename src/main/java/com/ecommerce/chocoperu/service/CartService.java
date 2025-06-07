@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,17 +33,28 @@ public class CartService {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (request.getQuantity() > product.getStock()) {
-            throw new RuntimeException("Not enough stock for product: " + product.getName());
+        CartItem existingItem = cartItemRepository.findByUserAndProduct(user, product);
+
+        if (existingItem != null) {
+            int newQuantity = existingItem.getQuantity() + request.getQuantity();
+            if (newQuantity > product.getStock()) {
+                throw new RuntimeException("Stock insuficiente para " + product.getName());
+            }
+            existingItem.setQuantity(newQuantity);
+            return cartItemRepository.save(existingItem);
         }
 
-        CartItem cartItem = CartItem.builder()
+        if (request.getQuantity() > product.getStock()) {
+            throw new RuntimeException("Stock insuficiente para " + product.getName());
+        }
+
+        CartItem newItem = CartItem.builder()
                 .user(user)
                 .product(product)
                 .quantity(request.getQuantity())
                 .build();
 
-        return cartItemRepository.save(cartItem);
+        return cartItemRepository.save(newItem);
     }
 
     public List<CartItemDto> listCartItems(User user) {
@@ -71,6 +81,7 @@ public class CartService {
                 .id(item.getId())
                 .productId(item.getProduct().getId())
                 .productName(item.getProduct().getName())
+                .productImage(item.getProduct().getImageUrl())
                 .quantity(item.getQuantity())
                 .unitPrice(item.getProduct().getPrice())
                 .totalPrice(item.getQuantity() * item.getProduct().getPrice())
@@ -87,7 +98,7 @@ public class CartService {
         cartItemRepository.deleteAll(cartItems);
         Order order = orderRepository.findById(orderDto.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found after checkout"));
-        Payment payment = paymentService.createPayment(
+        paymentService.createPayment(
                 order.getId(),
                 "not_provided",
                 UUID.randomUUID().toString(),
@@ -95,7 +106,6 @@ public class CartService {
         );
         return order;
     }
-
 
     public CartItem updateQuantity(Long cartItemId, int quantity, User user) {
         CartItem item = cartItemRepository.findById(cartItemId)

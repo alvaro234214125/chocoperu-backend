@@ -62,4 +62,22 @@ public class OrderController {
         List<OrderDto> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
     }
+
+    @PostMapping("/{id}/pay")
+    @PreAuthorize("hasRole('USER') or hasRole('PROVIDER')")
+    public ResponseEntity<Void> payOrder(@PathVariable Long id, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
+        orderService.payOrder(id, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('USER') or hasRole('PROVIDER')")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long id, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
+        orderService.cancelOrder(id, user);
+        return ResponseEntity.ok().build();
+    }
 }

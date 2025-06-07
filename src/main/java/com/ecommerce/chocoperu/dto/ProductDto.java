@@ -1,6 +1,5 @@
 package com.ecommerce.chocoperu.dto;
 
-import jdk.jshell.Snippet;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,6 +15,5 @@ public class ProductDto {
     private Long categoryId;
     private String providerName;
     private String categoryName;
+    private String imageUrl;
 }
-
-

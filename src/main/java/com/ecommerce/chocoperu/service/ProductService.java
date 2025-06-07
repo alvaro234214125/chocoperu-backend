@@ -7,7 +7,6 @@ import com.ecommerce.chocoperu.entity.User;
 import com.ecommerce.chocoperu.repository.ProductRepository;
 import com.ecommerce.chocoperu.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +63,7 @@ public class ProductService {
                 .categoryId(product.getCategory().getId())
                 .providerName(product.getProvider().getUsername())
                 .categoryName(product.getCategory().getName())
+                .imageUrl(product.getImageUrl())
                 .build();
     }
 
@@ -77,10 +77,9 @@ public class ProductService {
                 .description(dto.getDescription())
                 .stock(dto.getStock())
                 .price(dto.getPrice())
+                .imageUrl(dto.getImageUrl())
                 .provider(provider)
                 .category(category)
                 .build();
     }
-
-
 }
